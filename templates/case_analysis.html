@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>케이스 분석 페이지</title>
+    <!-- Tailwind CSS CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* 사이드바 애니메이션 */
+      #sidebar {
+        transition: width 0.3s ease, padding 0.3s ease;
+      }
+      #sidebar.collapsed {
+        width: 0 !important;
+        padding: 0 !important;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- 상단 헤더 -->
+    <header class="bg-blue-600 h-16 flex items-center justify-between px-4">
+      <div class="flex items-center">
+        <button
+          id="toggleSidebar"
+          class="mr-2 text-white focus:outline-none"
+          title="사이드바 숨기기/펼치기"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+        <h1 class="text-white text-2xl">케이스 분석 페이지</h1>
+      </div>
+      <button
+        onclick="location.href='/case'"
+        class="text-white focus:outline-none"
+        title="나가기"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+      </button>
+    </header>
+
+    <!-- 사이드바와 메인 콘텐츠 영역 -->
+    <div class="flex">
+      <!-- 왼쪽 사이드바 -->
+      <aside
+        id="sidebar"
+        class="w-64 bg-white shadow-md p-4 transition-all duration-300"
+        style="height: calc(100vh - 4rem)"
+      >
+        <nav>
+          <ul id="sidebarCategories" class="space-y-2">
+            <!-- JSON 데이터로 동적 생성 -->
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- 메인 콘텐츠 영역 -->
+      <div class="flex-1 p-8">
+        <!-- 검색 바 및 버튼들 -->
+        <div class="mb-4 flex items-center space-x-2">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="검색어 입력"
+            class="border border-gray-300 rounded px-4 py-2 focus:outline-none w-full"
+          />
+          <!-- 실제 검색 버튼 (필요시 기능 추가) -->
+          <!-- 검색 옵션 모달을 띄우는 버튼 -->
+          <button
+            id="searchOptionBtn"
+            class="bg-blue-500 text-white px-4 py-2 rounded focus:outline-none"
+          >
+            .
+          </button>
+        </div>
+
+        <!-- 검색 결과와 상세 정보 영역 -->
+        <div class="flex">
+          <!-- 검색 결과 테이블 (기본 100% 폭) -->
+          <div id="searchResults" class="w-full transition-all duration-300">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    ID
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    host
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    content
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    timestamp
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="bg-white divide-y divide-gray-200"
+                id="resultsTableBody"
+              >
+                <!-- JSON 데이터를 통해 동적 생성 -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 상세 정보 표시 영역 (기본 숨김) -->
+          <div
+            id="detailPane"
+            class="hidden w-0 pl-4 transition-all duration-300 border-l border-gray-300"
+          >
+            <div class="flex justify-end">
+              <button id="closeDetail" class="text-red-500 mb-2">닫기</button>
+            </div>
+            <div
+              id="detailContent"
+              class="p-4 bg-white shadow rounded min-h-[150px] text-gray-700"
+            >
+              <!-- 클릭한 셀의 상세 정보 표시 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 검색 옵션 모달 -->
+    <div
+      id="searchModal"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden"
+    >
+      <div class="bg-white p-6 rounded shadow-lg w-11/12 md:w-1/2">
+        <h2 class="text-xl font-bold mb-4">검색 옵션</h2>
+        <form id="searchForm" class="space-y-4">
+          <div>
+            <label for="startTime" class="block text-gray-700 mb-1"
+              >시작시간</label
+            >
+            <input
+              type="datetime-local"
+              id="startTime"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label for="endTime" class="block text-gray-700 mb-1"
+              >끝 시간</label
+            >
+            <input
+              type="datetime-local"
+              id="endTime"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label for="eventId" class="block text-gray-700 mb-1"
+              >이벤트 아이디</label
+            >
+            <input
+              type="text"
+              id="eventId"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label for="regex" class="block text-gray-700 mb-1"
+              >정규표현식</label
+            >
+            <input
+              type="text"
+              id="regex"
+              placeholder="정규표현식 입력"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
+            />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button
+              type="button"
+              id="closeModal"
+              class="bg-red-500 text-white px-4 py-2 rounded focus:outline-none"
+            >
+              닫기
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-500 text-white px-4 py-2 rounded focus:outline-none"
+            >
+              검색
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 기존 사이드바 관련 스크립트 -->
+    <script>
+      // 사이드바 토글 기능
+      const toggleButton = document.getElementById("toggleSidebar");
+      const sidebar = document.getElementById("sidebar");
+
+      toggleButton.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+      });
+
+      // JSON 데이터 (사이드바 카테고리)
+      const categories = [
+        {
+          title: "Source",
+          children: [
+            { title: "PC-01(0)", url: "#" },
+            { title: "PC-02(0)", url: "#" },
+            { title: "PC-03(0)", url: "#" },
+            { title: "PC-04(0)", url: "#" },
+          ],
+        },
+        {
+          title: "Search",
+          children: [
+            { title: "text(0)", url: "#" },
+            { title: "regexp(0)", url: "#" },
+            { title: "ip address(0)", url: "#" },
+            { title: "ip:port patten(0)", url: "#" },
+          ],
+        },
+        {
+          title: "Process",
+          children: [
+            { title: "svchost.exe(0)", url: "#" },
+            { title: "cmd.exe(0)", url: "#" },
+            { title: "explorer.exe(0)", url: "#" },
+            { title: "lsass.exe(0)", url: "#" },
+            { title: "services.exe(0)", url: "#" },
+            { title: "winlogon.exe(0)", url: "#" },
+            { title: "smss.exe(0)", url: "#" },
+            { title: "csrss.exe(0)", url: "#" },
+            { title: "wininit.exe(0)", url: "#" },
+            { title: "dwm.exe(0)", url: "#" },
+            { title: "taskhostw.exe(0)", url: "#" },
+            { title: "conhost.exe(0)", url: "#" },
+          ],
+        },
+        {
+          title: "TTP Mapping",
+          children: [
+            { title: "Reconnaissance (0)", url: "#" },
+            { title: "Resource Development (0)", url: "#" },
+            { title: "Initial Access (0)", url: "#" },
+            { title: "Execution (0)", url: "#" },
+            { title: "Persistence (0)", url: "#" },
+            { title: "Privilege Escalation (0)", url: "#" },
+            { title: "Defense Evasion (0)", url: "#" },
+            { title: "Credential Access (0)", url: "#" },
+            { title: "Discovery (0)", url: "#" },
+            { title: "Lateral Movement (0)", url: "#" },
+            { title: "Collection (0)", url: "#" },
+            { title: "Command and Control (0)", url: "#" },
+            { title: "Exfiltration (0)", url: "#" },
+            { title: "Impact (0)", url: "#" },
+          ],
+        },
+      ];
+
+      function getClosedFolderIcon() {
+        return `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />`;
+      }
+      function getOpenFolderIcon() {
+        return `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v1H3V7z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 10h18v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7z" />`;
+      }
+
+      function renderCategories() {
+        const container = document.getElementById("sidebarCategories");
+        container.innerHTML = "";
+
+        categories.forEach((category, index) => {
+          const li = document.createElement("li");
+
+          const headerDiv = document.createElement("div");
+          headerDiv.className =
+            "flex items-center justify-between cursor-pointer";
+          headerDiv.dataset.toggleId = "category" + index;
+          headerDiv.addEventListener("click", function () {
+            toggleCategory(this.dataset.toggleId);
+          });
+
+          const headerLeft = document.createElement("div");
+          headerLeft.className = "flex items-center";
+          const iconSvg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg"
+          );
+          iconSvg.setAttribute("id", "category" + index + "Icon");
+          iconSvg.setAttribute(
+            "class",
+            "h-5 w-5 text-gray-600 mr-1 transition-transform duration-200"
+          );
+          iconSvg.setAttribute("fill", "none");
+          iconSvg.setAttribute("viewBox", "0 0 24 24");
+          iconSvg.setAttribute("stroke", "currentColor");
+          iconSvg.innerHTML = getClosedFolderIcon();
+
+          headerLeft.appendChild(iconSvg);
+          const titleSpan = document.createElement("span");
+          titleSpan.className = "font-bold text-gray-800";
+          titleSpan.textContent = category.title;
+          headerLeft.appendChild(titleSpan);
+
+          headerDiv.appendChild(headerLeft);
+          li.appendChild(headerDiv);
+
+          const childUl = document.createElement("ul");
+          childUl.setAttribute("id", "category" + index + "List");
+          childUl.className =
+            "ml-4 mt-2 space-y-1 border-l border-dotted border-gray-300 pl-2 hidden";
+
+          category.children.forEach((child) => {
+            const childLi = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = child.url;
+            a.className = "block text-gray-700 hover:text-blue-600";
+            a.textContent = child.title;
+            childLi.appendChild(a);
+            childUl.appendChild(childLi);
+          });
+
+          li.appendChild(childUl);
+          container.appendChild(li);
+        });
+      }
+
+      function toggleCategory(toggleId) {
+        const childUl = document.getElementById(toggleId + "List");
+        const iconSvg = document.getElementById(toggleId + "Icon");
+        if (childUl.classList.contains("hidden")) {
+          childUl.classList.remove("hidden");
+          iconSvg.innerHTML = getOpenFolderIcon();
+        } else {
+          childUl.classList.add("hidden");
+          iconSvg.innerHTML = getClosedFolderIcon();
+        }
+      }
+
+      // 초기 사이드바 렌더링
+      renderCategories();
+    </script>
+
+    <!-- 테이블 데이터 및 상세 정보 관련 스크립트 -->
+    <script>
+      // 더미 JSON 데이터
+      const tableData = [
+        {
+          id: 1,
+          host: "PC-01",
+          name: "프로세스가 생성되었습니다.",
+          value: "2024-11-02 12:11:22",
+          detail: "여기서 상세정보 1을 보여줍니다.",
+        },
+        {
+          id: 2,
+          host: "PC-02",
+          name: "프로세스가 생성되었습니다.",
+          value: "2024-11-02 12:11:22",
+          detail: "여기서 상세정보 2를 보여줍니다.",
+        },
+        {
+          id: 3,
+          host: "PC-03",
+          name: "프로세스가 생성되었습니다.",
+          value: "2024-11-02 12:11:22",
+          detail: "여기서 상세정보 3을 보여줍니다.",
+        },
+      ];
+
+      // 테이블 바디에 데이터를 동적 렌더링
+      const resultsTableBody = document.getElementById("resultsTableBody");
+
+      function renderTableData() {
+        resultsTableBody.innerHTML = "";
+        tableData.forEach((item) => {
+          const tr = document.createElement("tr");
+          tr.className = "cursor-pointer";
+          tr.setAttribute("data-detail", item.detail);
+
+          tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">${item.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${item.host}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${item.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${item.value}</td>
+          `;
+          resultsTableBody.appendChild(tr);
+        });
+      }
+
+      renderTableData();
+
+      // 상세 정보 및 테이블 영역 조정
+      document.addEventListener("DOMContentLoaded", function () {
+        const rows = document.querySelectorAll("#resultsTableBody tr");
+        const searchResults = document.getElementById("searchResults");
+        const detailPane = document.getElementById("detailPane");
+        const detailContent = document.getElementById("detailContent");
+        const closeDetail = document.getElementById("closeDetail");
+
+        rows.forEach((row) => {
+          row.addEventListener("click", () => {
+            searchResults.classList.remove("w-full");
+            searchResults.classList.add("w-1/2");
+
+            detailPane.classList.remove("hidden", "w-0");
+            detailPane.classList.add("w-1/2");
+
+            detailContent.innerText = row.getAttribute("data-detail");
+          });
+        });
+
+        closeDetail.addEventListener("click", () => {
+          searchResults.classList.remove("w-1/2");
+          searchResults.classList.add("w-full");
+
+          detailPane.classList.remove("w-1/2");
+          detailPane.classList.add("w-0", "hidden");
+        });
+      });
+    </script>
+
+    <!-- 검색 옵션 모달 관련 스크립트 -->
+    <script>
+      const searchOptionBtn = document.getElementById("searchOptionBtn");
+      const searchModal = document.getElementById("searchModal");
+      const closeModal = document.getElementById("closeModal");
+
+      searchOptionBtn.addEventListener("click", () => {
+        searchModal.classList.remove("hidden");
+      });
+
+      closeModal.addEventListener("click", () => {
+        searchModal.classList.add("hidden");
+      });
+
+      // 폼 제출 시 모달 닫힘 (추후 검색 로직 구현 가능)
+      document.getElementById("searchForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        // 여기서 검색 옵션에 따른 필터링 로직을 구현할 수 있습니다.
+        alert("검색 옵션이 적용되었습니다.");
+        searchModal.classList.add("hidden");
+      });
+    </script>
+  </body>
+</html>
